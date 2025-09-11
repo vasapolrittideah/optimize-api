@@ -1,0 +1,73 @@
+version: "2"
+
+formatters:
+  enable:
+    - goimports
+    - golines
+    - gofmt
+    - gci
+
+  settings:
+    goimports:
+      local-prefixes:
+        - github.com/vasapolrittideah/optimize-api
+
+    golines:
+      max-len: 120
+      tab-len: 2
+      shorten-comments: false
+      reformat-tags: true
+      chain-split-dots: true
+
+    gofmt:
+      simplify: true
+      rewrite-rules:
+        - pattern: "interface{}"
+          replacement: "any"
+
+    gci:
+      sections:
+        - standard
+        - default
+        - localmodule
+
+run:
+  timeout: "5m"
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
+  new: false
+  fix: false
+  uniq-by-line: false
+  whole-files: false
+
+linters:
+  exclusions:
+    warn-unused: false
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+
+  enable:
+    - dupword
+    - errcheck
+    - errname
+    - exptostd
+    - goconst
+    - gocritic
+    - govet
+    - fatcontext
+    - ineffassign
+    - mirror
+    - nonamedreturns
+    - revive
+    - staticcheck
+    - unconvert
+    - unparam
+    - unused
+    - usetesting
+    - usestdlibvars
+    - whitespace
