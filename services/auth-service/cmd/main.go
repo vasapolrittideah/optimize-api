@@ -7,12 +7,17 @@ import (
 	"os/signal"
 	"syscall"
 
+	"google.golang.org/grpc"
+
 	"github.com/vasapolrittideah/optimize-api/services/auth-service/internal/config"
+	grpcHandler "github.com/vasapolrittideah/optimize-api/services/auth-service/internal/delivery/grpc"
+	mongoRepo "github.com/vasapolrittideah/optimize-api/services/auth-service/internal/repository/mongo"
+	"github.com/vasapolrittideah/optimize-api/services/auth-service/internal/usecase"
+	"github.com/vasapolrittideah/optimize-api/shared/auth"
 	"github.com/vasapolrittideah/optimize-api/shared/database"
 	"github.com/vasapolrittideah/optimize-api/shared/discovery"
 	"github.com/vasapolrittideah/optimize-api/shared/logger"
 	"github.com/vasapolrittideah/optimize-api/shared/utilities"
-	"google.golang.org/grpc"
 )
 
 func main() {
@@ -48,15 +53,27 @@ func main() {
 		}
 	}()
 
+	jwtAuthenticator := auth.NewJWTAuthenticator(
+		authServiceCfg.Token.Issuer,
+		authServiceCfg.Token.Issuer,
+	)
+
+	identityRepo := mongoRepo.NewIdentityMongoRepository(mongodb.GetDatabase())
+	sessionRepo := mongoRepo.NewSessionMongoRepository(mongodb.GetDatabase())
+	userRepo := mongoRepo.NewUserMongoRepository(ctx, logger, mongodb.GetDatabase())
+
+	authUsecase := usecase.NewAuthUsecase(identityRepo, sessionRepo, userRepo, jwtAuthenticator, authServiceCfg)
+
+	grpcServer := grpc.NewServer()
+	grpcHandler.NewAuthGRPCHandler(grpcServer, logger, authUsecase)
+
+	utilities.RegisterHealthServer(grpcServer)
+
 	lc := net.ListenConfig{}
 	lis, err := lc.Listen(ctx, "tcp", authServiceCfg.Address)
 	if err != nil {
 		logger.Fatal().Err(err).Msg("failed to create listener")
 	}
-
-	grpcServer := grpc.NewServer()
-
-	utilities.RegisterHealthServer(grpcServer)
 
 	go func() {
 		logger.Info().Msg("Starting gRPC server...")
