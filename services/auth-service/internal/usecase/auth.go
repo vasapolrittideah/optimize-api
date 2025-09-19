@@ -44,7 +44,7 @@ func NewAuthUsecase(
 	}
 }
 
-func (u *authUsecase) Login(ctx context.Context, params domain.LoginParams) (*authtypes.Tokens, error) {
+func (u *authUsecase) SignIn(ctx context.Context, params domain.SignInParams) (*authtypes.Tokens, error) {
 	user, err := u.userRepo.GetUserByEmail(ctx, params.Email)
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {

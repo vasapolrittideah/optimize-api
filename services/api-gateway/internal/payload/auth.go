@@ -1,11 +1,11 @@
 package payload
 
-type LoginRequest struct {
+type SignInRequest struct {
 	Email    string `json:"email"    validate:"required,email"`
 	Password string `json:"password" validate:"required"`
 }
 
-type LoginResponse struct {
+type SignInResponse struct {
 	AccessToken  string `json:"access_token"`
 	RefreshToken string `json:"refresh_token"`
 }

@@ -35,15 +35,15 @@ func NewAuthGRPCHandler(
 	return handler
 }
 
-func (h *authGRPCHandler) Login(ctx context.Context, req *authpbv1.LoginRequest) (*authpbv1.LoginResponse, error) {
-	params := domain.LoginParams{
+func (h *authGRPCHandler) SignIn(ctx context.Context, req *authpbv1.SignInRequest) (*authpbv1.SignInResponse, error) {
+	params := domain.SignInParams{
 		Email:    req.GetEmail(),
 		Password: req.GetPassword(),
 	}
 
-	tokens, err := h.authUsecase.Login(ctx, params)
+	tokens, err := h.authUsecase.SignIn(ctx, params)
 	if err != nil {
-		h.logger.Error().Err(err).Msg("failed to login")
+		h.logger.Error().Err(err).Msg("failed to sign in")
 
 		switch {
 		case errors.Is(err, usecase.ErrInvalidCredentials):
@@ -53,7 +53,7 @@ func (h *authGRPCHandler) Login(ctx context.Context, req *authpbv1.LoginRequest)
 		}
 	}
 
-	return &authpbv1.LoginResponse{
+	return &authpbv1.SignInResponse{
 		AccessToken:  tokens.AccessToken,
 		RefreshToken: tokens.RefreshToken,
 	}, nil

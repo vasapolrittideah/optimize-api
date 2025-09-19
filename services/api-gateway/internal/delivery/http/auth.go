@@ -35,13 +35,13 @@ func NewAuthHTTPHandler(
 
 func (h *AuthHTTPHandler) RegisterRoutes() {
 	h.router.Route("/auth", func(r chi.Router) {
-		r.Post("/login", h.login)
+		r.Post("/signin", h.signIn)
 		r.Post("/signup", h.signUp)
 	})
 }
 
-func (h *AuthHTTPHandler) login(w http.ResponseWriter, r *http.Request) {
-	var req payload.LoginRequest
+func (h *AuthHTTPHandler) signIn(w http.ResponseWriter, r *http.Request) {
+	var req payload.SignInRequest
 	if err := utilities.ReadJSON(w, r, &req); err != nil {
 		utilities.WriteRequestErrorResponse(w, r, err.Error(), h.logger)
 		return
@@ -52,7 +52,7 @@ func (h *AuthHTTPHandler) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	grpcResp, err := h.authServiceClient.Client.Login(r.Context(), &authpbv1.LoginRequest{
+	grpcResp, err := h.authServiceClient.Client.SignIn(r.Context(), &authpbv1.SignInRequest{
 		Email:    req.Email,
 		Password: req.Password,
 	})
@@ -61,7 +61,7 @@ func (h *AuthHTTPHandler) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	payload := &payload.LoginResponse{
+	payload := &payload.SignInResponse{
 		AccessToken:  grpcResp.AccessToken,
 		RefreshToken: grpcResp.RefreshToken,
 	}
