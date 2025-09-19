@@ -5,7 +5,7 @@
 set -e
 
 # Constants
-MAX_DESCRIPTION_LENGTH=60
+MAX_DESCRIPTION_LENGTH=70
 
 # Valid commit types (space-separated list)
 VALID_TYPES="feat fix docs style refactor perf test chore build ci"
@@ -71,7 +71,7 @@ validate_commit() {
 
     # Parse conventional commit format using regex
     # Matches: type(scope): description or type: description
-    # Also handles breaking changes with !
+    # Also handles breaking changes with
     local regex='^([a-zA-Z]+)(\([^)]+\))?(!)?:[[:space:]]*(.+)$'
     if [[ ! "$commit_msg" =~ $regex ]]; then
         print_error "commit message does not follow conventional commit format"
