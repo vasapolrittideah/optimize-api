@@ -1,23 +1,39 @@
-package cmd
+package main
 
 import (
 	"context"
 	"net/http"
 	"os"
 	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 
 	"github.com/vasapolrittideah/optimize-api/services/api-gateway/internal/config"
+	httphandler "github.com/vasapolrittideah/optimize-api/services/api-gateway/internal/delivery/http"
+	authclient "github.com/vasapolrittideah/optimize-api/services/auth-service/pkg/client"
+	"github.com/vasapolrittideah/optimize-api/shared/discovery"
 	"github.com/vasapolrittideah/optimize-api/shared/logger"
 )
 
 func main() {
 	logger := logger.New()
 
+	consulRegistry, err := discovery.NewConsulRegistry(logger)
+	if err != nil {
+		logger.Fatal().Err(err).Msg("failed to create consul registry")
+	}
+
 	apiGatewayCfg := config.NewAPIGatewayConfig(logger)
+	authServiceClient, err := authclient.NewAuthServiceClient(
+		apiGatewayCfg.AuthServiceCfg.Name,
+		consulRegistry,
+	)
+	if err != nil {
+		logger.Fatal().Err(err).Msg("failed to create auth service client")
+	}
 
 	r := chi.NewRouter()
 
@@ -34,6 +50,9 @@ func main() {
 		Handler:      r,
 	}
 
+	authHandler := httphandler.NewAuthHTTPHandler(r, logger, authServiceClient)
+	authHandler.RegisterRoutes()
+
 	serverErrors := make(chan error, 1)
 
 	go func() {
@@ -42,7 +61,7 @@ func main() {
 	}()
 
 	shutdown := make(chan os.Signal, 1)
-	signal.Notify(shutdown, os.Interrupt)
+	signal.Notify(shutdown, os.Interrupt, syscall.SIGTERM)
 
 	select {
 	case err := <-serverErrors:
